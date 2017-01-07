@@ -7,25 +7,33 @@ package open.jinq;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
  * @author jafet
  */
 public class Main {
+
     public static void main(String[] args) {
         List<List<String>> list = new ArrayList<>();
-        for(int i=0; i<10; i++){
+        for (int i = 0; i < 1500; i++) {
             List<String> temp = new ArrayList<>();
-            for(int j=0; j<100; j++){
-                temp.add(String.valueOf(i+":"+j));
+            for (int j = 0; j < 10000; j++) {
+                temp.add(String.valueOf(i + ":" + j));
             }
             list.add(temp);
         }
-        
-        for(String s:Sequence.of(list).where(e->e.get(0).charAt(0)!='5').skip(4).take(3).flat(e->e)){
-            System.out.println(s);
-        }
+        long time = 0;
+        for (int i = 0; i < 100; i++) {
+            time = System.nanoTime();
+            Sequence.of(list).where(e -> e.get(0).charAt(0) != '5').skip(4).take(3).flat(e -> e).toList();
+            System.out.println("a:" + (System.nanoTime() - time));
 
+            time = System.nanoTime();
+            list.stream().filter(e -> e.get(0).charAt(0) != '5').skip(4).limit(3).flatMap(e -> e.stream()).collect(Collectors.toList());
+            System.out.println("b: " + (System.nanoTime() - time));
+
+        }
     }
 }

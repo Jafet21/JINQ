@@ -63,7 +63,7 @@ public interface Sequence<T> extends Iterable<T> {
     }
 
     static <T> Sequence<T> of(Iterable<T> iterable) {
-        return () -> new DefaultIterator<>(iterable.iterator());
+        return () -> iterable.iterator();
     }
 
     static <T> Sequence<T> of(T... array) {
@@ -121,25 +121,6 @@ class ArrayIterator<T> implements Iterator<T> {
     @Override
     public T next() {
         return array[index++];
-    }
-}
-
-class DefaultIterator<T> implements Iterator<T> {
-
-    private final Iterator<T> items;
-
-    public DefaultIterator(Iterator<T> items) {
-        this.items = items;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return items.hasNext();
-    }
-
-    @Override
-    public T next() {
-        return items.next();
     }
 }
 
