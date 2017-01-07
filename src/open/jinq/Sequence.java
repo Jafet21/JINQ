@@ -37,9 +37,23 @@ public interface Sequence<T> extends Iterable<T> {
 
             @Override
             public T next() {
+                count++;
                 return it.next();
             }
         };
+    }
+    
+    default int count(){
+        Iterator<T> it = iterator();
+        int count = 0;
+        for(; it.hasNext(); count++){
+            it.next();
+        }
+        return count;
+    }
+    
+    default <R> Sequence<R> flat(Function<T,Iterable<R>> mapper){
+        return ()->new FlatIterator<>(iterator(), mapper);
     }
 
     default List<T> toList() {
@@ -57,8 +71,37 @@ public interface Sequence<T> extends Iterable<T> {
     }
 }
 
-class Skipper<T> implements Iterator<T> {
+class FlatIterator<T, R> implements Iterator<R>{
+    private final Iterator<T> items;
+    private final Function<T, Iterable<R>> mapper;
+    private Iterator<R> actual;
+    
+    FlatIterator(Iterator<T> items, Function<T, Iterable<R>> mapper){
+        this.items = items;
+        this.mapper = mapper;
+    }
 
+    @Override
+    public boolean hasNext() {
+        if(actual==null){
+            if(items.hasNext()){
+                actual = mapper.apply(items.next()).iterator();
+            }
+            else{
+                return false;
+            }
+        }
+        if(!actual.hasNext()){
+            actual = null;
+            return hasNext();
+        }
+        return true;
+    }
+
+    @Override
+    public R next() {
+        return actual.next();
+    }
 }
 
 class ArrayIterator<T> implements Iterator<T> {
@@ -134,6 +177,9 @@ class FilterIterator<T> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {
+        if(next!=null){
+            return true;
+        }
         while (items.hasNext()) {
             next = items.next();
             if (predicate.test(next)) {
@@ -145,6 +191,8 @@ class FilterIterator<T> implements Iterator<T> {
 
     @Override
     public T next() {
-        return next;
+        T temp = next;
+        next = null;
+        return temp;
     }
 }
